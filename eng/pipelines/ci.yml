@@ -1,24 +1,33 @@
-# This is the main build definition (PR+CI) for dotnet/dotnet
+# This is the dotnet/dotnet pipeline that is triggered every weekday at midnight (00:00 UTC) for "main" and when changes are pushed to all other branches.
+
+schedules:
+- cron: '0 0 * * Mon-Fri'
+  displayName: Weekday midnight build
+  branches:
+    include:
+    - main
+  batch: true
 
 trigger:
   batch: true
   branches:
-    include:
-    - main
-    - release/*
-    - internal/release/*
+   exclude:
+   - main
 
-pr:
-  branches:
-    include:
-    - main
-    - release/*
-    - internal/release/*
+pr: none
 
 stages:
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - template: templates/stages/vmr-scan.yml
+- stage: Stage1
+  jobs:
+  - job: Job1
+    displayName: "Stage 1"
+    steps:
+    - script: echo "Stage 1"
+      displayName: "Stage 1"
 
-- template: /src/installer/eng/pipelines/templates/stages/vmr-build.yml
-  parameters:
-    isBuiltFromVmr: true
+- stage: Stage2
+  jobs:
+  - job: Job2
+    steps:
+    - script: echo "Stage 2"
+      displayName: "Stage 2"
