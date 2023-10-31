@@ -22,7 +22,7 @@ stages:
   - job: Job1
     displayName: "Stage 1"
     steps:
-    - script: echo "Stage 1"
+    - script: echo "Changing for PR"
       displayName: "Stage 1"
 
 - stage: Stage2
