@@ -17,7 +17,6 @@
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.24062.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>d731f58a502086842739a358ab490bec08fdb8a7</Sha>
-      <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
     <Dependency Name="Microsoft.DotNet.CodeAnalysis" Version="9.0.0-beta.24062.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
@@ -47,11 +46,6 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>59edaad404d1b8e47080015ae8d0787f94c970df</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="9.0.0-alpha.1.24067.1">
-      <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>549aadff1660b230bdfffa562eea3edf59dd0bb4</Sha>
-      <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
-    </Dependency>
     <Dependency Name="Microsoft.CodeAnalysis" Version="4.6.0-1.23073.4">
       <Uri>https://github.com/dotnet/roslyn</Uri>
       <Sha>6acaa7b7c0efea8ea292ca26888c0346fbf8b0c1</Sha>
@@ -67,6 +61,16 @@
     <Dependency Name="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0-preview.23420.2">
       <Uri>https://github.com/dotnet/roslyn-analyzers</Uri>
       <Sha>76d99c5f3e11f0600fae074270c0d89042c360f0</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="9.0.0-alpha.1.24067.1">
+      <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
+      <Sha>549aadff1660b230bdfffa562eea3edf59dd0bb4</Sha>
+      <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
+    </Dependency>
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.24062.5">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>d731f58a502086842739a358ab490bec08fdb8a7</Sha>
+      <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
