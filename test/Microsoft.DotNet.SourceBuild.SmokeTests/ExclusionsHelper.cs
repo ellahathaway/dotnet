@@ -2,10 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-// This is a static singleton class that provides helper methods for managing exclusions.
-// if a new exclusions file is read, it will be cached in the static Exclusions dictionary.
-// if should keep track of all unused exclusions and write them to a file at the end of the test run.
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,6 +22,10 @@ internal static class ExclusionsHelper
     
     private const string NullSuffix = "NULL_SUFFIX";
 
+    // Set this if you want to only focus on a specific category of exclusions.
+    // An example would be "test-templates" in order to include "src/test-templates/exclusions.txt|cs,csproj"
+    public static string ExclusionCategory = null;
+
     static ExclusionsHelper()
     {
         AppDomain.CurrentDomain.ProcessExit += onProcessExit;
@@ -36,29 +36,20 @@ internal static class ExclusionsHelper
         RemoveUnusedExclusionsFromBaselines();
     }
 
-    internal static bool IsFileExcluded(string filePath, string exclusionsFileName, string suffix = NullSuffix, ITestOutputHelper outputHelper = null)
+    internal static bool IsFileExcluded(string filePath, string exclusionsFileName, string suffix = NullSuffix)
     {
-        Dictionary<string, HashSet<string>> exclusions = GetExclusions(exclusionsFileName, outputHelper);
+        // If a specific suffix is provided, check that first. If it is not found, check the default suffix.
+        return CheckAndRemoveIfExcluded(filePath, exclusionsFileName, suffix) ||
+            (suffix != NullSuffix && CheckAndRemoveIfExcluded(filePath, exclusionsFileName, NullSuffix));
+    }
 
-        // check if the file is excluded by the suffix
-        if (exclusions.TryGetValue(suffix, out HashSet<string> exclusionList))
-        {
-            foreach (string exclusion in exclusionList)
-            {
-                Matcher matcher = new();
-                matcher.AddInclude(exclusion);
-                if (matcher.Match(filePath).HasMatches)
-                {
-                    RemoveUsedExclusion(exclusionsFileName, exclusion, suffix);
-                    return true;
-                }
-            }
-        }
+    private static bool CheckAndRemoveIfExcluded(string filePath, string exclusionsFileName, string suffix = NullSuffix)
+    {
+        Dictionary<string, HashSet<string>> exclusions = GetExclusions(exclusionsFileName);
 
-        // check if the file is excluded by the null suffix
-        if (suffix != NullSuffix && exclusions.TryGetValue(NullSuffix, out HashSet<string> nullSuffixExclusionList))
+        if (exclusions.TryGetValue(suffix, out HashSet<string> suffixExclusionList))
         {
-            foreach (string exclusion in nullSuffixExclusionList)
+            foreach (string exclusion in suffixExclusionList)
             {
                 Matcher matcher = new();
                 matcher.AddInclude(exclusion);
@@ -69,23 +60,23 @@ internal static class ExclusionsHelper
                 }
             }
         }
-
         return false;
     }
 
-    internal static Dictionary<string, HashSet<string>> GetExclusions(string exclusionsFileName, ITestOutputHelper outputHelper = null)
+    internal static Dictionary<string, HashSet<string>> GetExclusions(string exclusionsFileName)
     {
         if (!FileNamesToExclusions.TryGetValue(exclusionsFileName, out Dictionary<string, HashSet<string>> exclusions))
         {
-            exclusions = ParseExclusionsFile(exclusionsFileName, outputHelper);
+            exclusions = ParseExclusionsFile(exclusionsFileName);
             FileNamesToExclusions[exclusionsFileName] = exclusions;
-            FileNamesToUnusedExclusions[exclusionsFileName] = exclusions;
+            FileNamesToUnusedExclusions[exclusionsFileName] = new Dictionary<string, HashSet<string>>(
+                exclusions.ToDictionary(pair => pair.Key, pair => new HashSet<string>(pair.Value)));
         }
 
         return exclusions;
     }
 
-    private static Dictionary<string, HashSet<string>> ParseExclusionsFile(string exclusionsFileName, ITestOutputHelper outputHelper)
+    private static Dictionary<string, HashSet<string>> ParseExclusionsFile(string exclusionsFileName)
     {
         string exclusionsFilePath = Path.Combine(BaselineHelper.GetAssetsDirectory(), exclusionsFileName);
         return File.ReadAllLines(exclusionsFilePath)
@@ -97,7 +88,10 @@ internal static class ExclusionsHelper
             })
             .Where(line => !string.IsNullOrEmpty(line))
             .Select(line => line.Split('|'))
-            .Select(parts => new { Line = parts[0], Suffixes = parts.Length > 1 ? parts[1].Split(',').Select(suffix => suffix.Trim()) : new string[] { NullSuffix } })
+            .Where(parts => ExclusionCategory is null || parts[0].Contains(ExclusionCategory))
+            .Select(parts => new {
+                Line = parts[0],
+                Suffixes = parts.Length > 1 ? parts[1].Split(',').Select(suffix => suffix.Trim()) : new string[] { NullSuffix } })
             .SelectMany(parts => parts.Suffixes.Select(suffix => new { parts.Line, Suffix = suffix }))
             .GroupBy(parts => parts.Suffix, parts => parts.Line)
             .ToDictionary(group => group.Key, group => new HashSet<string>(group));
@@ -116,52 +110,52 @@ internal static class ExclusionsHelper
 
     private static void RemoveUnusedExclusionsFromBaselines()
     {
+
         foreach (KeyValuePair<string, Dictionary<string, HashSet<string>>> fileToUnusedExclusions in FileNamesToUnusedExclusions)
         {
             string exclusionsFileName = fileToUnusedExclusions.Key;
             string exclusionsFilePath = Path.Combine(BaselineHelper.GetAssetsDirectory(), exclusionsFileName);
+
             string[] lines = File.ReadAllLines(exclusionsFilePath);
-            foreach (KeyValuePair<string, HashSet<string>> unusedExclusions in fileToUnusedExclusions.Value)
+            
+            // Remove unused exclusions from the file
+            foreach (var suffixExclusionList in fileToUnusedExclusions.Value)
             {
-                string suffix = unusedExclusions.Key;
-                foreach (string exclusion in unusedExclusions.Value)
+                string suffix = suffixExclusionList.Key;
+                if (suffix == NullSuffix)
                 {
-                    // grab the line from the exclusions file
-                    string line = lines.FirstOrDefault(l => l.Contains(exclusion))!;
-                    if (line != null)
+                    // Remove all unused exclusions
+                    lines = lines.Where(line => !suffixExclusionList.Value.Contains(line)).ToArray();
+                }
+                else
+                {
+                    // Remove only the specific suffix, unless it is the only suffix
+                    foreach (string exclusion in suffixExclusionList.Value)
                     {
-                        // if the exclusion is just exclusion, remove the whole line.
-                        if (line == exclusion)
+                        lines = lines.Select(line =>
                         {
-                            lines = lines.Where(l => l != line).ToArray();
-                        }
-                        // if the exclusion is exclusion|suffix, remove the whole line.
-                        else if (line == ($"{exclusion}|{suffix}"))
-                        {
-                            lines = lines.Where(l => l != line).ToArray();
-                        }
-                        // if the exclusion is exclusion|suffix,other, remove just the suffix and the comma if the comma exists.
-                        else if (line.Contains(exclusion) && line.Contains(suffix))
-                        {
-                            if (line.Contains($"{suffix},"))
+                            if (line.Contains(exclusion) && line.Contains(suffix))
                             {
-                                string newLine = line.Replace($"{suffix},", string.Empty);
-                                lines = lines.Select(l => l == line ? newLine : l).ToArray();
+                                if (line.Contains($",{suffix}"))
+                                {
+                                    return line.Replace($",{suffix}", string.Empty);
+                                }
+                                else if (line.Contains($"{suffix},"))
+                                {
+                                    return line.Replace($"{suffix},", string.Empty);
+                                }
+                                else if (line.Contains(suffix))
+                                {
+                                    return string.Empty;
+                                }
                             }
-                            else if (line.Contains($",{suffix}"))
-                            {
-                                string newLine = line.Replace($",{suffix}", string.Empty);
-                                lines = lines.Select(l => l == line ? newLine : l).ToArray();
-                            }
-                            else
-                            {
-                                lines = lines.Where(l => l != line).ToArray();
-                            }
-                        }
+                            return line;
+                        }).ToArray();
                     }
                 }
             }
-            string actualFilePath = Path.Combine(TestBase.LogsDirectory, $"Updated{exclusionsFileName}");
+            
+            string actualFilePath = Path.Combine(TestBase.LogsDirectory, $"Updated-{ExclusionCategory}-{exclusionsFileName}");
             File.WriteAllLines(actualFilePath, lines);
         }
     }

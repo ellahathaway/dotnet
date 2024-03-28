@@ -177,7 +177,7 @@ public class SdkContentTests : SdkTests
                 string relativePath = Path.GetRelativePath(sbSdkPath, file);
                 string normalizedPath = BaselineHelper.RemoveVersions(relativePath);
 
-                if(!ExclusionsHelper.IsFileExcluded(normalizedPath, "SdkFileDiffExclusions.txt", SourceBuildSdkType, OutputHelper))
+                if(!ExclusionsHelper.IsFileExcluded(normalizedPath, "SdkFileDiffExclusions.txt", SourceBuildSdkType))
                 {
                     sbSdkAssemblyVersions.Add(normalizedPath, GetVersion(assemblyName));
                 }
@@ -197,7 +197,7 @@ public class SdkContentTests : SdkTests
         fileListing = BaselineHelper.RemoveRids(fileListing, isPortable);
         fileListing = BaselineHelper.RemoveVersions(fileListing);
         IEnumerable<string> files = fileListing.Split(Environment.NewLine).OrderBy(path => path);
-        files = files.Where(item => !ExclusionsHelper.IsFileExcluded(item, "SdkFileDiffExclusions.txt", sdkType, OutputHelper));
+        files = files.Where(item => !ExclusionsHelper.IsFileExcluded(item, "SdkFileDiffExclusions.txt", sdkType));
 
         File.WriteAllLines(outputFileName, files);
     }
