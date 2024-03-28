@@ -16,6 +16,12 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.SourceBuild.SmokeTests;
 
+[CollectionDefinition("ExclusionsHelper tests")]
+public class ExclusionsHelperCollection : ICollectionFixture<ExclusionsHelperFixture>
+{
+}
+
+[Collection("ExclusionsHelper tests")]
 [Trait("Category", "SdkContent")]
 public class SdkContentTests : SdkTests
 {
@@ -82,9 +88,6 @@ public class SdkContentTests : SdkTests
 
     private static void RemoveExcludedAssemblyVersionPaths(Dictionary<string, Version?> sbSdkAssemblyVersions, Dictionary<string, Version?> msftSdkAssemblyVersions)
     {
-        IEnumerable<string> assemblyVersionDiffFilters = GetSdkAssemblyVersionDiffExclusionFilters()
-            .Select(filter => filter.TrimStart("./".ToCharArray()));
-
         // Remove any excluded files as long as SB SDK's file has the same or greater assembly version compared to the corresponding
         // file in the MSFT SDK. If the version is less, the file will show up in the results as this is not a scenario
         // that is valid for shipping.
@@ -98,7 +101,7 @@ public class SdkContentTests : SdkTests
             if (sbVersion is not null &&
                 msftVersion is not null &&
                 sbVersion >= msftVersion &&
-                Utilities.IsFileExcluded(assemblyPath, assemblyVersionDiffFilters))
+                ExclusionsHelper.IsFileExcluded(assemblyPath, "SdkAssemblyVersionDiffExclusions.txt"))
             {
                 sbSdkAssemblyVersions.Remove(assemblyPath);
                 msftSdkAssemblyVersions.Remove(assemblyPath);
@@ -169,8 +172,6 @@ public class SdkContentTests : SdkTests
 
     private Dictionary<string, Version?> GetSbSdkAssemblyVersions(string sbSdkPath)
     {
-        IEnumerable<string> exclusionFilters = GetSdkDiffExclusionFilters(SourceBuildSdkType)
-            .Select(filter => filter.TrimStart("./".ToCharArray()));
         Dictionary<string, Version?> sbSdkAssemblyVersions = new();
         foreach (string file in Directory.EnumerateFiles(sbSdkPath, "*", SearchOption.AllDirectories))
         {
@@ -182,7 +183,7 @@ public class SdkContentTests : SdkTests
                 string relativePath = Path.GetRelativePath(sbSdkPath, file);
                 string normalizedPath = BaselineHelper.RemoveVersions(relativePath);
 
-                if (!Utilities.IsFileExcluded(normalizedPath, exclusionFilters))
+                if(!ExclusionsHelper.IsFileExcluded(normalizedPath, "SdkFileDiffExclusions.txt", SourceBuildSdkType, OutputHelper))
                 {
                     sbSdkAssemblyVersions.Add(normalizedPath, GetVersion(assemblyName));
                 }
@@ -202,19 +203,10 @@ public class SdkContentTests : SdkTests
         fileListing = BaselineHelper.RemoveRids(fileListing, isPortable);
         fileListing = BaselineHelper.RemoveVersions(fileListing);
         IEnumerable<string> files = fileListing.Split(Environment.NewLine).OrderBy(path => path);
-        files = RemoveExclusions(files, GetSdkDiffExclusionFilters(sdkType));
+        files = files.Where(item => !ExclusionsHelper.IsFileExcluded(item, "SdkFileDiffExclusions.txt", sdkType, OutputHelper));
 
         File.WriteAllLines(outputFileName, files);
     }
-
-    private static IEnumerable<string> RemoveExclusions(IEnumerable<string> files, IEnumerable<string> exclusions) =>
-        files.Where(item => !Utilities.IsFileExcluded(item, exclusions));
-
-    private static IEnumerable<string> GetSdkDiffExclusionFilters(string sdkType) =>
-        Utilities.ParseExclusionsFile("SdkFileDiffExclusions.txt", sdkType);
-
-    private static IEnumerable<string> GetSdkAssemblyVersionDiffExclusionFilters() =>
-        Utilities.ParseExclusionsFile("SdkAssemblyVersionDiffExclusions.txt");
 
     private static string RemoveDiffMarkers(string source)
     {
