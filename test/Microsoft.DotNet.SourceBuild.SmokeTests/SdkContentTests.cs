@@ -16,12 +16,6 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.SourceBuild.SmokeTests;
 
-[CollectionDefinition("ExclusionsHelper tests")]
-public class ExclusionsHelperCollection : ICollectionFixture<ExclusionsHelperFixture>
-{
-}
-
-[Collection("ExclusionsHelper tests")]
 [Trait("Category", "SdkContent")]
 public class SdkContentTests : SdkTests
 {

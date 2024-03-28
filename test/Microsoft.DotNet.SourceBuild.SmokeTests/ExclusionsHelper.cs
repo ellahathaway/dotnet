@@ -114,7 +114,7 @@ internal static class ExclusionsHelper
         }
     }
 
-    internal static void RemoveUnusedExclusionsFromBaselines()
+    private static void RemoveUnusedExclusionsFromBaselines()
     {
         foreach (KeyValuePair<string, Dictionary<string, HashSet<string>>> fileToUnusedExclusions in FileNamesToUnusedExclusions)
         {
@@ -164,20 +164,5 @@ internal static class ExclusionsHelper
             string actualFilePath = Path.Combine(TestBase.LogsDirectory, $"Updated{exclusionsFileName}");
             File.WriteAllLines(actualFilePath, lines);
         }
-    }
-}
-
-
-public class ExclusionsHelperFixture : IDisposable
-{
-    public ExclusionsHelperFixture()
-    {
-        // Setup code here
-    }
-
-    public void Dispose()
-    {
-        // This code runs after all tests in the collection have finished
-        ExclusionsHelper.RemoveUnusedExclusionsFromBaselines();
     }
 }
