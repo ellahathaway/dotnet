@@ -172,7 +172,7 @@ internal static class ExclusionsHelper
                 })
                 .Where(line => line is not null);
 
-            string actualFilePath = Path.Combine(TestBase.LogsDirectory, $"Updated-{exclusionsFileName}");
+            string actualFilePath = Path.Combine(TestBase.LogsDirectory, $"Updated{exclusionsFileName}");
             File.WriteAllLines(actualFilePath, newLines);
         }
     }
