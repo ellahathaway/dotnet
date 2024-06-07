@@ -11,6 +11,10 @@ parameters:
 - name: dotnetDotnetRunId
   type: string
 
+- name: publishTestResultsPr
+  type: boolean
+  default: false
+
 jobs:
 - job: ${{ parameters.buildName }}_${{ parameters.architecture }}
   timeoutInMinutes: 150
@@ -161,3 +165,11 @@ jobs:
       mergeTestResults: true
       publishRunAttachments: true
       testRunTitle: $(Agent.JobName)
+
+  - template: ../steps/create-baseline-update-pr.yml
+    parameters:
+      pipeline: sdk
+      repo: maestro-auth-test/private-installer
+      originalFilesDirectory: src/SourceBuild/content/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/baselines
+      updatedFilesDirectory: $(Build.StagingDirectory)/BuildLogs
+      pullRequestTitle: Update Source-Build SDK Diff Tests Baselines and Exclusions
