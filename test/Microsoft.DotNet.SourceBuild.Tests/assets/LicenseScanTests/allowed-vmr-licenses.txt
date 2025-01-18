@@ -1,0 +1,80 @@
+# Contains the list of files to be excluded from license scanning.
+#
+# This list is processed using FileSystemName.MatchesSimpleExpression
+#
+# Format:
+#   Exclude the file entirely from license scanning:
+#     <vmr-file-path>
+#   Exclude a specific detected license expression from the scan results for the file:
+#     <vmr-file-path>|<license-expression>[,<license-expression>...]
+
+#
+# arcade
+#
+
+# Applies to installer, not source
+src/arcade/src/Microsoft.DotNet.Build.Tasks.Installers/build/wix/eula.rtf
+
+#
+# aspnetcore
+#
+
+# Windows installer files that have a reference to a URL for license
+src/aspnetcore/src/Framework/App.Runtime/bundle/theme/**/*.wxl|unknown-license-reference
+src/aspnetcore/src/Installers/Windows/**/*.wxl|unknown-license-reference
+src/aspnetcore/src/Installers/Windows/**/*.wxs|unknown-license-reference
+
+#
+# fsharp
+#
+
+# Applies to installer, not source
+src/fsharp/setup/resources/eula/*.rtf
+
+#
+# nuget-client
+#
+
+# Test data
+src/nuget-client/test/**/resources/*.json
+src/nuget-client/test/**/resources/*.xml
+src/nuget-client/test/NuGet.Clients.Tests/NuGet.PackageManagement.UI.Test/PackageLicenseUtilitiesTests.cs
+src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/DefaultManifestValuesRuleTests.cs
+src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/LicenseExpressionTokenizerTests.cs
+src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/NuGetLicenseExpressionParserTests.cs
+src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/NuGetLicenseTests.cs
+src/nuget-client/test/TestUtilities/Test.Utility/JsonData.cs
+
+#
+# roslyn
+#
+
+# Applicable to installer, not source
+src/roslyn/src/Setup/Roslyn.ThirdPartyNotices/ThirdPartyNotices.rtf
+src/roslyn/src/Setup/Roslyn.VsixLicense/EULA.rtf
+
+# Test data
+src/roslyn/src/Analyzers/VisualBasic/Tests/FileHeaders/FileHeaderTests.vb|unknown-license-reference
+src/roslyn/src/EditorFeatures/CSharpTest2/EmbeddedLanguages/RegularExpressions/Regex_RealWorldPatterns.json
+
+#
+# runtime
+#
+
+# Installer asset, not applicable to source
+src/runtime/src/installer/pkg/LICENSE-MSFT.TXT
+
+# Test data
+src/runtime/src/libraries/System.Private.Xml.Linq/tests/XDocument.Common/InputSpace.cs|other-permissive
+src/runtime/src/libraries/System.Private.Xml.Linq/tests/XDocument.Common/THIRD-PARTY-NOTICE|other-permissive
+src/runtime/src/libraries/System.Runtime/tests/System.Runtime.Tests/TestModule/README.md|unknown-license-reference
+src/runtime/src/libraries/System.ServiceModel.Syndication/tests/TestFeeds/AtomFeeds/*.xml
+
+#
+# source-build-externals
+#
+
+# Scanner is identifying the https://github.com/SixLabors/ImageSharp/blob/master/LICENSE license as unknown. But this license is not applicable because we're
+# relying on the Spectre.Console distribution.
+# See https://github.com/dotnet/dotnet/blob/c6a7278fbb7d79fa3d1f386ef0dc8474043ed06c/src/source-build-externals/src/spectre-console/README.md?plain=1#L104
+src/source-build-externals/src/spectre-console/README.md|unknown-license-reference

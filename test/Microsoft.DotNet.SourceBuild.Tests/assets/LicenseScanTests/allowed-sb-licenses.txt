@@ -8,6 +8,9 @@
 #   Exclude a specific detected license expression from the scan results for the file:
 #     <vmr-file-path>|<license-expression>[,<license-expression>...]
 
+# Import the allowed souce-build licenses (a stricter set).
+import:allowed-sb-licenses.txt
+
 #
 # arcade
 #
@@ -21,9 +24,6 @@ src/arcade/src/Microsoft.DotNet.XUnitAssert/src/README.md|free-unknown
 src/arcade/eng/xcopy-msbuild/msbuild.nuspec|ms-visual-2015-sdk
 src/arcade/src/Microsoft.DotNet.Arcade.Sdk/tools/Licenses/*
 
-# Applies to installer, not source
-src/arcade/src/Microsoft.DotNet.Build.Tasks.Installers/build/wix/eula.rtf
-
 #
 # aspnetcore
 #
@@ -31,11 +31,6 @@ src/arcade/src/Microsoft.DotNet.Build.Tasks.Installers/build/wix/eula.rtf
 # A generic statement about license applicability that is being detected as "unknown"
 src/aspnetcore/src/Components/THIRD-PARTY-NOTICES.txt|unknown
 src/aspnetcore/THIRD-PARTY-NOTICES.txt|unknown
-
-# Windows installer files that have a reference to a URL for license
-src/aspnetcore/src/Framework/App.Runtime/bundle/theme/**/*.wxl|unknown-license-reference
-src/aspnetcore/src/Installers/Windows/**/*.wxl|unknown-license-reference
-src/aspnetcore/src/Installers/Windows/**/*.wxs|unknown-license-reference
 
 # License reference used in configuration, but not applying to code
 src/aspnetcore/src/Mvc/Settings.StyleCop|unknown-license-reference
@@ -71,13 +66,6 @@ src/efcore/test/EfCore.Tests/ChangeTracking/ComplexPropertyEntryTest.cs|propriet
 src/efcore/test/EfCore.Tests/ChangeTracking/MemberEntryTest.cs|proprietary-license
 
 #
-# fsharp
-#
-
-# Applies to installer, not source
-src/fsharp/setup/resources/eula/*.rtf
-
-#
 # msbuild
 #
 
@@ -100,16 +88,6 @@ src/nuget-client/src/NuGet.Clients/NuGet.VisualStudio.Internal.Contracts/Formatt
 src/nuget-client/src/NuGet.Core/NuGet.Packaging/Rules/DefaultManifestValuesRule.cs|unknown-license-reference
 src/nuget-client/test/TestExtensions/GenerateLicenseList/Program.cs|json
 
-# Test data
-src/nuget-client/test/**/resources/*.json
-src/nuget-client/test/**/resources/*.xml
-src/nuget-client/test/NuGet.Clients.Tests/NuGet.PackageManagement.UI.Test/PackageLicenseUtilitiesTests.cs
-src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/DefaultManifestValuesRuleTests.cs
-src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/LicenseExpressionTokenizerTests.cs
-src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/NuGetLicenseExpressionParserTests.cs
-src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/NuGetLicenseTests.cs
-src/nuget-client/test/TestUtilities/Test.Utility/JsonData.cs
-
 #
 # roslyn-analyzers
 #
@@ -118,23 +96,8 @@ src/nuget-client/test/TestUtilities/Test.Utility/JsonData.cs
 src/roslyn-analyzers/assets/EULA.txt|ms-net-library
 
 #
-# roslyn
-#
-
-# Test data
-src/roslyn/src/Analyzers/VisualBasic/Tests/FileHeaders/FileHeaderTests.vb|unknown-license-reference
-src/roslyn/src/EditorFeatures/CSharpTest2/EmbeddedLanguages/RegularExpressions/Regex_RealWorldPatterns.json
-
-# Applicable to installer, not source
-src/roslyn/src/Setup/Roslyn.ThirdPartyNotices/ThirdPartyNotices.rtf
-src/roslyn/src/Setup/Roslyn.VsixLicense/EULA.rtf
-
-#
 # runtime
 #
-
-# Installer asset, not applicable to source
-src/runtime/src/installer/pkg/LICENSE-MSFT.TXT
 
 # False positive
 src/runtime/src/libraries/System.ComponentModel.TypeConverter/src/System/ComponentModel/LicFileLicenseProvider.cs|proprietary-license
@@ -150,12 +113,6 @@ src/runtime/src/native/external/zlib-ng/cmake/detect-arch.cmake|unknown-license-
 src/runtime/src/native/external/zlib-ng/cmake/detect-coverage.cmake|other-permissive,tsl-2020,unknown-license-reference
 src/runtime/src/native/external/zlib-ng/cmake/detect-sanitizer.cmake|unknown-license-reference
 src/runtime/src/tests/JIT/Performance/CodeQuality/V8/Crypto/Crypto.cs|unknown-license-reference
-
-# Test data
-src/runtime/src/libraries/System.Private.Xml.Linq/tests/XDocument.Common/InputSpace.cs|other-permissive
-src/runtime/src/libraries/System.Private.Xml.Linq/tests/XDocument.Common/THIRD-PARTY-NOTICE|other-permissive
-src/runtime/src/libraries/System.Runtime/tests/System.Runtime.Tests/TestModule/README.md|unknown-license-reference
-src/runtime/src/libraries/System.ServiceModel.Syndication/tests/TestFeeds/AtomFeeds/*.xml
 
 # Reference to a license, not applicable to source
 src/runtime/docs/project/copyright.md
@@ -185,11 +142,6 @@ src/source-build-externals/src/humanizer/NuSpecs/*.nuspec*
 src/source-build-externals/src/xunit/README.md|free-unknown
 src/source-build-externals/src/xunit/src/xunit.assert/Asserts/README.md|free-unknown
 src/source-build-externals/src/xunit/tools/builder/common/README.md|free-unknown
-
-# Scanner is identifying the https://github.com/SixLabors/ImageSharp/blob/master/LICENSE license as unknown. But this license is not applicable because we're
-# relying on the Spectre.Console distribution.
-# See https://github.com/dotnet/dotnet/blob/c6a7278fbb7d79fa3d1f386ef0dc8474043ed06c/src/source-build-externals/src/spectre-console/README.md?plain=1#L104
-src/source-build-externals/src/spectre-console/README.md|unknown-license-reference
 
 # Configuration, doesn't apply to source directly
 src/source-build-externals/src/vs-solutionpersistence/stylecop.json

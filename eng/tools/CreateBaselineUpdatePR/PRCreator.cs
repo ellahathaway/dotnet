@@ -82,6 +82,7 @@ public class PRCreator
         {
             if (updatedFile.Key.Contains("Exclusions"))
             {
+                // This needs to be updated to allow the combination of the "allowed" file names
                 tree = await UpdateExclusionFileAsync(updatedFile.Key, updatedFile.Value, tree, union: isSdkPipeline);
             }
             else
