@@ -41,13 +41,13 @@ class ExclusionsHelper
     /// Storage for exclusions that were used during the test run.
     /// Used to check if a file matches an exclusion.
     /// </summary>
-    private readonly ExclusionStorage _storage;
+    private readonly ExclusionsStorage _storage;
 
     /// <summary>
     /// Storage for exclusions that were not used during the test run.
     /// Used to generate a new baseline file with the exclusions that were used.
     /// </summary>
-    private readonly ExclusionStorage _unusedStorage;
+    private readonly ExclusionsStorage _unusedStorage;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExclusionsHelper"/> class.
@@ -59,9 +59,9 @@ class ExclusionsHelper
     {
         _exclusionRegex = string.IsNullOrWhiteSpace(exclusionRegexString) ? null : new Regex(exclusionRegexString);
         _usingSuffixes = usingSuffixes;
-        _storage = new ExclusionStorage(_usingSuffixes);
+        _storage = new ExclusionsStorage(_usingSuffixes);
         ParseExclusionsFile(exclusionsFilePath);
-        _unusedStorage = new ExclusionStorage(usingSuffixes);
+        _unusedStorage = new ExclusionsStorage(_storage);
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ class ExclusionsHelper
     /// </param>
     /// </summary>
     public bool IsFileExcluded(string filePath, string? suffix = null) =>
-        CheckAndRemoveIfExcluded(filePath, suffix) || (_usingSuffixes && suffix != null && CheckAndRemoveIfExcluded(filePath, NullSuffix));
+        CheckAndRemoveIfExcluded(filePath, suffix) || (suffix != null && CheckAndRemoveIfExcluded(filePath, NullSuffix));
 
     /// <summary>
     /// Generates a new baseline file with the exclusions that were used.
@@ -96,7 +96,7 @@ class ExclusionsHelper
                 newLines = originalLines.Where(line =>
                     {
                         var (exclusion, _) = SplitExclusionLine(line);
-                        return !_unusedStorage.Contains(file, null, exclusion);
+                        return !_unusedStorage.Contains(file, exclusion, null);
                     }
                 );
             }
@@ -112,7 +112,7 @@ class ExclusionsHelper
                         throw new InvalidOperationException("Suffixes must be provided when using suffixes.");
                     }
 
-                    IEnumerable<string> unusedSuffixes = _unusedStorage.GetSuffixes(file).Where(suffix => _unusedStorage.Contains(file, suffix, exclusion));
+                    IEnumerable<string> unusedSuffixes = _unusedStorage.GetSuffixes(file).Where(suffix => _unusedStorage.Contains(file, exclusion, suffix));
                     if (unusedSuffixes.Count() == suffixes.Count())
                     {
                         return null;
@@ -144,7 +144,7 @@ class ExclusionsHelper
     {
         if (_storage.ContainsExclusionMatch(filePath, suffix, out var match))
         {
-            _unusedStorage.Remove(match.file, match.suffix, match.exclusion);
+            _unusedStorage.Remove(match.file, match.exclusion, match.suffix);
             return true;
         }
 
@@ -214,22 +214,7 @@ class ExclusionsHelper
             return;
         }
 
-        if (_usingSuffixes)
-        {
-            if (suffixes is null)
-            {
-                throw new InvalidOperationException("Suffixes must be provided when using suffixes.");
-            }
-
-            foreach (string suffix in suffixes)
-            {
-                _storage.Add(file, suffix, exclusion);
-            }
-        }
-        else
-        {
-            _storage.Add(file, null, exclusion);
-        }
+        _storage.Add(file, exclusion, suffixes);
     }
 
     /// <summary>
