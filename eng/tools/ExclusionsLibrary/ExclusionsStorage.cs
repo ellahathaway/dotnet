@@ -8,8 +8,22 @@ namespace ExclusionsLibrary;
 
 internal class ExclusionsStorage
 {
+    /// <summary>
+    /// Storage for exclusions.
+    /// Key: file path.
+    /// Value: list of exclusions for the file.
+    /// </summary>
     private Dictionary<string, List<Exclusion>> _storage = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExclusionsStorage"/> class.
+    /// </summary>
+    public ExclusionsStorage() { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExclusionsStorage"/> class.
+    /// <param name="other">The storage to copy.</param>
+    /// </summary>
     public ExclusionsStorage(ExclusionsStorage other)
     {
         foreach (string file in other._storage.Keys)
@@ -18,12 +32,13 @@ internal class ExclusionsStorage
         }
     }
 
+    /// <summary>
+    /// Gets all files in the storage.
+    /// </summary>
     public IEnumerable<string> GetFiles() => _storage.Keys;
 
-    public IEnumerable<string> GetSuffixes(string file) => _storage[file].SelectMany(exclusion => exclusion.GetSuffixes());
-
     /// <summary>
-    /// Adds an exclusion to the storage if it doesn't already exist.
+    /// Adds an exclusion to the storage.
     /// <param name="file">The file to add the exclusion to.</param>
     /// <param name="exclusion">The exclusion to add.</param>
     /// </summary>
@@ -37,7 +52,8 @@ internal class ExclusionsStorage
     }
 
     /// <summary>
-    /// Removes a suffix from an exclusion in the storage. If there are no suffixes left, the exclusion will be removed.
+    /// Removes a suffix from an exclusion in the storage.
+    /// If there are no suffixes left, the exclusion will be removed.
     /// <param name="file">The file for the exclusion.</param>
     /// <param name="pattern">The pattern to look for.</param>
     /// <param name="suffix">The suffix to remove.</param>
@@ -59,19 +75,33 @@ internal class ExclusionsStorage
         }
     }
 
-    public bool Contains(string file, Exclusion? exclusion = null) =>
-        _storage.ContainsKey(file) && (exclusion is null || _storage[file].Contains(exclusion));
+    /// <summary>
+    /// Checks if the storage contains a file.
+    /// <param name="file">The file to check for.</param>
+    /// </summary>
+    public bool ContainsFile(string file) => _storage.ContainsKey(file);
 
+    /// <summary>
+    /// Gets an exclusion from the storage.
+    /// <param name="file">The file to get the exclusion from.</param>
+    /// <param name="pattern">The pattern to look for.</param>
+    /// </summary>
     public Exclusion? GetExclusion(string file, string pattern) =>
         _storage.ContainsKey(file) ? _storage[file].FirstOrDefault(e => e.GetPattern() == pattern) : null;
 
-    public bool HasMatch(string filePath, string? suffix, out (string file, string pattern)? match)
+    /// <summary>
+    /// Checks if the storage has a match for a file path and suffix input.
+    /// <param name="filePath">The file path to check.</param>
+    /// <param name="suffix">The suffix to narrow down the scope of exclusions.</param>
+    /// <param name="match">The match if found.</param>
+    /// </summary>
+    public bool HasMatch(string filePath, string? suffix, out (string file, string pattern) match)
     {
         foreach (string file in _storage.Keys)
         {
             foreach (Exclusion exclusion in _storage[file])
             {
-                if (exclusion.HasMatch(filePath, suffix, out string? pattern))
+                if (exclusion.HasMatch(filePath, suffix, out string pattern))
                 {
                     match = (file, pattern);
                     return true;
@@ -79,7 +109,7 @@ internal class ExclusionsStorage
             }
         }
 
-        match = null;
+        match = (string.Empty, string.Empty);
         return false;
     }
 }

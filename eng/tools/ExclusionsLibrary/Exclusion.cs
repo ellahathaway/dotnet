@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace ExclusionsLibrary;
@@ -10,18 +12,6 @@ internal class Exclusion : IEquatable<Exclusion>
 {
     private string Pattern { get; }
     private HashSet<string?> Suffixes { get; }
-
-    public Exclusion(string pattern, HashSet<string?> suffixes)
-    {
-        Pattern = pattern;
-        Suffixes = suffixes;
-    }
-
-    public Exclusion(string pattern, string? suffix)
-    {
-        Pattern = pattern;
-        Suffixes = new HashSet<string?> { suffix };
-    }
 
     public Exclusion(string line)
     {
@@ -40,16 +30,14 @@ internal class Exclusion : IEquatable<Exclusion>
         Suffixes = new HashSet<string?>(other.Suffixes);
     }
 
-    public override bool Equals(Exclusion other)
-    {
-        return Pattern == other.Pattern && Suffixes.SetEquals(other.Suffixes);
-    }
+    public bool Equals(Exclusion? other) =>
+        other is not null && Pattern == other.Pattern && Suffixes.SetEquals(other.Suffixes);
 
-    public HashSet<string> GetSuffixes() => Suffixes;
+    public HashSet<string?> GetSuffixes() => Suffixes;
 
     public string GetPattern() => Pattern;
 
-    public bool HasMatch(string path, string? suffix, out string? pattern)
+    public bool HasMatch(string path, string? suffix, out string pattern)
     {
         if (Suffixes.Contains(suffix))
         {
@@ -62,7 +50,7 @@ internal class Exclusion : IEquatable<Exclusion>
             }
         }
 
-        pattern = null;
+        pattern = string.Empty;
         return false;
     }
 }
