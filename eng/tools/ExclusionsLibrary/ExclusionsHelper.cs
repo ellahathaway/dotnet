@@ -20,22 +20,11 @@ class ExclusionsHelper
     private const string FileImportPrefix = "import:";
 
     /// <summary>
-    /// Suffix to use when no suffix is provided.
-    /// Needed when using suffixes to indicate that the exclusion applies to all suffixes.
-    /// </summary>
-    private const string NullSuffix = "NULL_SUFFIX";
-
-    /// <summary>
     /// Regex to narrow down the scope of exclusions. If null, all exclusions will be used.
     /// For instance, setting this to "vstest" will consider 
     /// "src/vstest/file.txt" but not "src/arcade/file.txt".
     /// </summary>
     private readonly Regex? _exclusionRegex;
-
-    /// <summary>
-    /// Specifies whether we are using suffixes to narrow down the scope of exclusions.
-    /// </summary>
-    private readonly bool _usingSuffixes;
 
     /// <summary>
     /// Storage for exclusions that were used during the test run.
@@ -53,13 +42,12 @@ class ExclusionsHelper
     /// Initializes a new instance of the <see cref="ExclusionsHelper"/> class.
     /// <param name="exclusionsFilePath">Path to the exclusions file.</param>
     /// <param name="exclusionRegexString">Optional regex to narrow down the scope of exclusions.</param>
-    /// <param name="usingSuffixes">Optional flag to specify whether we are using suffixes to narrow down the scope of exclusions.</param>
     /// </summary>
-    public ExclusionsHelper(string exclusionsFilePath, string? exclusionRegexString = null, bool usingSuffixes = false)
+    public ExclusionsHelper(string exclusionsFilePath, string? exclusionRegexString = null)
     {
         _exclusionRegex = string.IsNullOrWhiteSpace(exclusionRegexString) ? null : new Regex(exclusionRegexString);
         _usingSuffixes = usingSuffixes;
-        _storage = new ExclusionsStorage(_usingSuffixes);
+        _storage = new ExclusionsStorage();
         ParseExclusionsFile(exclusionsFilePath);
         _unusedStorage = new ExclusionsStorage(_storage);
     }
@@ -69,12 +57,12 @@ class ExclusionsHelper
     /// <param name="filePath">Path to the file to check.</param>
     /// <param name="suffix">
     ///     Optional suffix to narrow down the scope of exclusions.
-    ///     If using suffices, the NULL_SUFFIX will be checked if a suffix is not provided
-    ///     or if the file is not excluded with the provided suffix.
+    ///     If using suffices, patterns without any suffixes will also
+    ///     be checked if the file is not excluded with the provided suffix.
     /// </param>
     /// </summary>
     public bool IsFileExcluded(string filePath, string? suffix = null) =>
-        CheckAndRemoveIfExcluded(filePath, suffix) || (suffix != null && CheckAndRemoveIfExcluded(filePath, NullSuffix));
+        CheckAndRemoveIfExcluded(filePath, suffix) || (suffix != null && CheckAndRemoveIfExcluded(filePath, null));
 
     /// <summary>
     /// Generates a new baseline file with the exclusions that were used.
@@ -87,42 +75,32 @@ class ExclusionsHelper
         foreach (string file in _unusedStorage.GetFiles())
         {
             string[] originalLines = File.ReadAllLines(file);
-            IEnumerable<string> newLines;
-
-            // anything in unusedStorage is not used, so we can remove it
-            if (!_usingSuffixes)
+            IEnumerable<string> newLines = originalLines.Select(line =>
             {
-                // these are just basic lines, so remove the ones that are in the unused storage
-                newLines = originalLines.Where(line =>
-                    {
-                        var (exclusion, _) = SplitExclusionLine(line);
-                        return !_unusedStorage.Contains(file, exclusion, null);
-                    }
-                );
-            }
-            else
-            {
-                // these are lines with suffixes. We need to remove the unused suffixes. if all suffixes are unused, remove the line
-                newLines = originalLines.Select(line =>
+                if (IsIgnorableLine(line))
                 {
-                    var (exclusion, suffixes) = SplitExclusionLine(line);
+                    return line;
+                }
 
-                    if (suffixes is null)
-                    {
-                        throw new InvalidOperationException("Suffixes must be provided when using suffixes.");
-                    }
-
-                    IEnumerable<string> unusedSuffixes = _unusedStorage.GetSuffixes(file).Where(suffix => _unusedStorage.Contains(file, exclusion, suffix));
-                    if (unusedSuffixes.Count() == suffixes.Count())
+                Exclusion exclusion = new(line);
+                Exclusion? unusedExclusion = _unusedStorage.GetExclusion(file, exclusion.GetPattern());
+                if (unusedExclusion is not null)
+                {
+                    HashSet<string> unusedSuffixes = unusedExclusion.GetSuffixes();
+                    if (unusedSuffixes.Count == exclusion.GetSuffixes().Count)
                     {
                         return null;
                     }
 
-                    IEnumerable<string> newSuffixes = suffixes.Except(unusedSuffixes).ToList();
-                    return $"{exclusion}|{string.Join(",", newSuffixes)}";
-                })
-                .Select(line => line!);
-            }
+                    // remove the unused suffixes from the line
+                    foreach (string suffix in unusedSuffixes)
+                    {
+                        string suffixPattern = $@"\s*,?\s*{suffix}\s*,?\s*";
+                        line = Regex.Replace(line, suffixPattern.ToString(), string.Empty);
+                    }
+                }
+                return line;
+            });
 
              if (additionalLines is not null)
             {
@@ -138,13 +116,13 @@ class ExclusionsHelper
     /// <summary>
     /// Checks if a file is excluded and removes it from the unused storage if it is.
     /// <param name="filePath">Path to the file to check.</param>
-    /// <param name="suffix">Optional suffix to narrow down the scope of exclusions.</param>
+    /// <param name="suffix">Suffix to narrow down the scope of exclusions.</param>
     /// </summary>
-    private bool CheckAndRemoveIfExcluded(string filePath, string? suffix = null)
+    private bool CheckAndRemoveIfExcluded(string filePath, string? suffix)
     {
-        if (_storage.ContainsExclusionMatch(filePath, suffix, out var match))
+        if (_storage.HasMatch(filePath, suffix, out (string file, string pattern)? match))
         {
-            _unusedStorage.Remove(match.file, match.exclusion, match.suffix);
+            _unusedStorage.Remove(match.file, match.pattern, suffix);
             return true;
         }
 
@@ -157,7 +135,7 @@ class ExclusionsHelper
     /// </summary>
     private void ParseExclusionsFile(string file)
     {
-        if (_storage.Contains(file, null, null))
+        if (_storage.Contains(file))
         {
             return;
         }
@@ -175,7 +153,7 @@ class ExclusionsHelper
         foreach (string line in File.ReadLines(file))
         {
             string trimmedLine = line.Trim();
-            if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+            if (IsIgnorableLine(trimmedLine))
             {
                 continue;
             }
@@ -206,38 +184,15 @@ class ExclusionsHelper
     /// </summary>
     private void ParseExclusionLine(string file, string line)
     {
-        var (exclusion, suffixes) = SplitExclusionLine(line);
-
-        if(_exclusionRegex is not null && !_exclusionRegex.IsMatch(exclusion))
+        Exclusion exclusion = new Exclusion(line);
+        if(_exclusionRegex is not null && !_exclusionRegex.IsMatch(exclusion.Pattern))
         {
             // Exclusion does not match the exclusion regex, so we can skip it
             return;
         }
-
-        _storage.Add(file, exclusion, suffixes);
+        _storage.Add(file, exclusion);
     }
 
-    /// <summary>
-    /// Splits a line from the exclusions file into an exclusion and its suffixes.
-    /// If suffixes are not being used, the suffixes will be null.
-    /// <param name="line">Line from the exclusions file.</param>
-    /// </summary>
-    private (string, IEnumerable<string>?) SplitExclusionLine(string line)
-    {
-        // We still split on '|' in case we have suffixes but we want to ignore them
-        string[] parsedLine = line.Split("#")[0].Split('|');
-
-        string exclusion = parsedLine[0].Trim();
-
-        if (!_usingSuffixes)
-        {
-            return (exclusion, null);
-        }
-
-        IEnumerable<string> suffixes = parsedLine.Length == 1
-            ? new[] { NullSuffix }
-            : parsedLine[1].Split(',').Select(suffix => suffix.Trim());
-
-        return (exclusion, suffixes);
-    }
+    private bool IsIgnorableLine(string line) =>
+        string.IsNullOrWhiteSpace(line) || line.StartsWith("#");
 }

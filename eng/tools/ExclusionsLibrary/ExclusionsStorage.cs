@@ -8,40 +8,78 @@ namespace ExclusionsLibrary;
 
 internal class ExclusionsStorage
 {
-    IExclusionsStorage _storage { get; set; }
-
-    public ExclusionsStorage(bool usingSuffixes)
-    {
-        if (usingSuffixes)
-        {
-            _storage = new SuffixExclusionsStorage();
-        }
-        else
-        {
-            _storage = new NoSuffixExclusionsStorage();
-        }
-    }
+    private Dictionary<string, List<Exclusion>> _storage = new();
 
     public ExclusionsStorage(ExclusionsStorage other)
     {
-        _storage = other._storage switch
+        foreach (string file in other._storage.Keys)
         {
-            SuffixExclusionsStorage s => new SuffixExclusionsStorage(s),
-            NoSuffixExclusionsStorage n => new NoSuffixExclusionsStorage(n),
-            _ => throw new InvalidOperationException("Unknown storage type.")
-        };
+            _storage[file] = other._storage[file].Select(e => new Exclusion(e)).ToList();
+        }
     }
 
-    public IEnumerable<string> GetFiles() => _storage.GetFiles();
+    public IEnumerable<string> GetFiles() => _storage.Keys;
 
-    public IEnumerable<string> GetSuffixes(string file) => _storage.GetSuffixes(file);
+    public IEnumerable<string> GetSuffixes(string file) => _storage[file].SelectMany(exclusion => exclusion.GetSuffixes());
 
-    public void Add(string file, string exclusion, IEnumerable<string>? suffixes) => _storage.Add(file, exclusion, suffixes);
+    /// <summary>
+    /// Adds an exclusion to the storage if it doesn't already exist.
+    /// <param name="file">The file to add the exclusion to.</param>
+    /// <param name="exclusion">The exclusion to add.</param>
+    /// </summary>
+    public void Add(string file, Exclusion exclusion)
+    {
+        if (!_storage.ContainsKey(file))
+        {
+            _storage[file] = new List<Exclusion>();
+        }
+        _storage[file].Add(exclusion);
+    }
 
-    public void Remove(string file, string exclusion, string? suffix) => _storage.Remove(file, exclusion, suffix);
+    /// <summary>
+    /// Removes a suffix from an exclusion in the storage. If there are no suffixes left, the exclusion will be removed.
+    /// <param name="file">The file for the exclusion.</param>
+    /// <param name="pattern">The pattern to look for.</param>
+    /// <param name="suffix">The suffix to remove.</param>
+    /// </summary>
+    public void Remove(string file, string pattern, string? suffix)
+    {
+        if (_storage.ContainsKey(file))
+        {
+            Exclusion? exclusion = _storage[file].FirstOrDefault(e => e.GetPattern() == pattern);
+            if (exclusion is not null)
+            {
+                _storage[file].Remove(exclusion);
+                exclusion.GetSuffixes().Remove(suffix);
+                if (exclusion.GetSuffixes().Count > 0)
+                {
+                    _storage[file].Add(exclusion);
+                }
+            }
+        }
+    }
 
-    public bool Contains(string file, string? exclusion, string? suffix) => _storage.Contains(file, exclusion, suffix);
+    public bool Contains(string file, Exclusion? exclusion = null) =>
+        _storage.ContainsKey(file) && (exclusion is null || _storage[file].Contains(exclusion));
 
-    public bool ContainsExclusionMatch(string filePath, string? suffix, out (string file, string exclusion, string? suffix) match) =>
-        _storage.ContainsExclusionMatch(filePath, suffix, out match);
+    public Exclusion? GetExclusion(string file, string pattern) =>
+        _storage.ContainsKey(file) ? _storage[file].FirstOrDefault(e => e.GetPattern() == pattern) : null;
+
+    public bool HasMatch(string filePath, string? suffix, out (string file, string pattern)? match)
+    {
+        foreach (string file in _storage.Keys)
+        {
+            foreach (Exclusion exclusion in _storage[file])
+            {
+                if (exclusion.HasMatch(filePath, suffix, out string? pattern))
+                {
+                    match = (file, pattern);
+                    return true;
+                }
+            }
+        }
+
+        match = null;
+        return false;
+    }
 }
