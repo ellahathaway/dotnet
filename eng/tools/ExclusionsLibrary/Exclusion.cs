@@ -43,16 +43,16 @@ internal class Exclusion : IEquatable<Exclusion>
     /// </summary>
     public bool HasMatch(string path, string? suffix, out string pattern)
     {
-        // if (Suffixes.Contains(suffix))
-        // {
-        //     Matcher matcher = new();
-        //     matcher.AddInclude(Pattern);
-        //     if (matcher.Match(path).HasMatches)
-        //     {
-        //         pattern = Pattern;
-        //         return true;
-        //     }
-        // }
+        if (Suffixes.Contains(suffix))
+        {
+            Matcher matcher = new();
+            matcher.AddInclude(Pattern);
+            if (matcher.Match(path).HasMatches)
+            {
+                pattern = Pattern;
+                return true;
+            }
+        }
 
         pattern = string.Empty;
         return false;

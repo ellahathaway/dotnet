@@ -12,7 +12,7 @@ using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace ExclusionsLibrary;
 
-class ExclusionsHelper
+public class ExclusionsHelper
 {
     /// <summary>
     /// Prefix for lines that import other exclusion files.
@@ -66,8 +66,9 @@ class ExclusionsHelper
     /// Generates a new baseline file with the exclusions that were used.
     /// <param name="updatedFileTag">Optional tag to append to the updated file name.</param>
     /// <param name="additionalLines">Optional additional lines to append to the updated file.</param>
+    /// <param name="targetDirectory">Optional target directory for the updated file. If not provided, all files will be updated to the same directory as the original file.</param>
     /// </summary>
-    public void GenerateNewBaselineFile(string? updatedFileTag = null, List<string>? additionalLines = null)
+    public void GenerateNewBaselineFile(string? updatedFileTag = null, List<string>? additionalLines = null, string? targetDirectory = null)
     {
         foreach (string file in _unusedStorage.GetFiles())
         {
@@ -108,11 +109,13 @@ class ExclusionsHelper
                 newLines = newLines.Concat(additionalLines);
             }
 
+            string targetDir = targetDirectory ?? Path.GetDirectoryName(file) ?? throw new InvalidOperationException($"Could not get directory for file: {file}");
+            string fileName = Path.GetFileName(file);
             string updatedFileName = updatedFileTag is null
-                ? $"Updated{file}"
-                : $"Updated{Path.GetFileNameWithoutExtension(file)}.{updatedFileTag}{Path.GetExtension(file)}";
+                ? $"Updated{fileName}"
+                : $"Updated{Path.GetFileNameWithoutExtension(fileName)}.{updatedFileTag}{Path.GetExtension(fileName)}";
 
-            File.WriteAllLines(updatedFileName, newLines, Encoding.UTF8);
+            File.WriteAllLines(Path.Combine(targetDir, updatedFileName), newLines, Encoding.UTF8);
         }
     }
 
