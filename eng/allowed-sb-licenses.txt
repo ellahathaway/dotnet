@@ -8,9 +8,6 @@
 #   Exclude a specific detected license expression from the scan results for the file:
 #     <vmr-file-path>|<license-expression>[,<license-expression>...]
 
-# Import the allowed souce-build licenses (a stricter set).
-import:allowed-sb-licenses.txt
-
 #
 # arcade
 #
@@ -144,9 +141,6 @@ src/source-build-externals/src/humanizer/NuSpecs/*.nuspec*
 src/source-build-externals/src/xunit/README.md|free-unknown
 src/source-build-externals/src/xunit/src/xunit.assert/Asserts/README.md|free-unknown
 src/source-build-externals/src/xunit/tools/builder/common/README.md|free-unknown
-
-# Configuration, doesn't apply to source directly
-src/source-build-externals/src/vs-solutionpersistence/stylecop.json
 
 #
 # source-build-reference-packages

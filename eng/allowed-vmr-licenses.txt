@@ -8,6 +8,9 @@
 #   Exclude a specific detected license expression from the scan results for the file:
 #     <vmr-file-path>|<license-expression>[,<license-expression>...]
 
+# Import the allowed souce-build licenses (a stricter set).
+import:allowed-sb-licenses.txt
+
 #
 # arcade
 #
@@ -75,6 +78,9 @@ src/runtime/src/libraries/System.ServiceModel.Syndication/tests/TestFeeds/AtomFe
 #
 # source-build-externals
 #
+
+# Configuration, doesn't apply to source directly
+src/source-build-externals/src/vs-solutionpersistence/stylecop.json
 
 # Scanner is identifying the https://github.com/SixLabors/ImageSharp/blob/master/LICENSE license as unknown. But this license is not applicable because we're
 # relying on the Spectre.Console distribution.
