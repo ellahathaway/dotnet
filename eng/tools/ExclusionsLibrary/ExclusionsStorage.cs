@@ -62,12 +62,12 @@ internal class ExclusionsStorage
     {
         if (_storage.ContainsKey(file))
         {
-            Exclusion? exclusion = _storage[file].FirstOrDefault(e => e.GetPattern() == pattern);
+            Exclusion? exclusion = _storage[file].FirstOrDefault(e => e.Pattern == pattern);
             if (exclusion is not null)
             {
                 _storage[file].Remove(exclusion);
-                exclusion.GetSuffixes().Remove(suffix);
-                if (exclusion.GetSuffixes().Count > 0)
+                exclusion.Suffixes.Remove(suffix);
+                if (exclusion.Suffixes.Count > 0)
                 {
                     _storage[file].Add(exclusion);
                 }
@@ -87,7 +87,7 @@ internal class ExclusionsStorage
     /// <param name="pattern">The pattern to look for.</param>
     /// </summary>
     public Exclusion? GetExclusion(string file, string pattern) =>
-        _storage.ContainsKey(file) ? _storage[file].FirstOrDefault(e => e.GetPattern() == pattern) : null;
+        _storage.ContainsKey(file) ? _storage[file].FirstOrDefault(e => e.Pattern == pattern) : null;
 
     /// <summary>
     /// Checks if the storage has a match for a file path and suffix input.

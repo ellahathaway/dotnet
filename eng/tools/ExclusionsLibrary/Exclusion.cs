@@ -10,8 +10,14 @@ namespace ExclusionsLibrary;
 
 internal class Exclusion : IEquatable<Exclusion>
 {
-    private string Pattern { get; }
-    private HashSet<string?> Suffixes { get; }
+    public string Pattern { get; init; }
+    public HashSet<string?> Suffixes { get; init; }
+
+    public Exclusion(string pattern, HashSet<string?> suffixes)
+    {
+        Pattern = pattern;
+        Suffixes = suffixes;
+    }
 
     public Exclusion(string line)
     {
@@ -24,31 +30,29 @@ internal class Exclusion : IEquatable<Exclusion>
             : new HashSet<string?> { null };
     }
 
-    public Exclusion(Exclusion other)
-    {
-        Pattern = other.Pattern;
-        Suffixes = new HashSet<string?>(other.Suffixes);
-    }
+    public Exclusion(Exclusion other) : this(other.Pattern, new HashSet<string?>(other.Suffixes)) { }
 
     public bool Equals(Exclusion? other) =>
         other is not null && Pattern == other.Pattern && Suffixes.SetEquals(other.Suffixes);
 
-    public HashSet<string?> GetSuffixes() => Suffixes;
-
-    public string GetPattern() => Pattern;
-
+    /// <summary>
+    /// Checks if the exclusion matches the path and suffix.
+    /// <param name="path">The path to check.</param>
+    /// <param name="suffix">The suffix to check.</param>
+    /// <param name="pattern">The pattern that matched.</param>
+    /// </summary>
     public bool HasMatch(string path, string? suffix, out string pattern)
     {
-        if (Suffixes.Contains(suffix))
-        {
-            Matcher matcher = new();
-            matcher.AddInclude(Pattern);
-            if (matcher.Match(path).HasMatches)
-            {
-                pattern = Pattern;
-                return true;
-            }
-        }
+        // if (Suffixes.Contains(suffix))
+        // {
+        //     Matcher matcher = new();
+        //     matcher.AddInclude(Pattern);
+        //     if (matcher.Match(path).HasMatches)
+        //     {
+        //         pattern = Pattern;
+        //         return true;
+        //     }
+        // }
 
         pattern = string.Empty;
         return false;

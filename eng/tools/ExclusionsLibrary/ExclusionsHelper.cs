@@ -80,13 +80,13 @@ class ExclusionsHelper
                     }
 
                     Exclusion exclusion = new(line);
-                    Exclusion? unusedExclusion = _unusedStorage.GetExclusion(file, exclusion.GetPattern());
+                    Exclusion? unusedExclusion = _unusedStorage.GetExclusion(file, exclusion.Pattern);
                     if (unusedExclusion is not null)
                     {
-                        HashSet<string?> unusedSuffixes = unusedExclusion.GetSuffixes();
+                        HashSet<string?> unusedSuffixes = unusedExclusion.Suffixes;
 
                         // If all suffixes are unused, we can remove the exclusion
-                        if (unusedSuffixes.Count == exclusion.GetSuffixes().Count)
+                        if (unusedSuffixes.Count == exclusion.Suffixes.Count)
                         {
                             return null;
                         }
@@ -111,6 +111,8 @@ class ExclusionsHelper
             string updatedFileName = updatedFileTag is null
                 ? $"Updated{file}"
                 : $"Updated{Path.GetFileNameWithoutExtension(file)}.{updatedFileTag}{Path.GetExtension(file)}";
+
+            File.WriteAllLines(updatedFileName, newLines, Encoding.UTF8);
         }
     }
 
@@ -173,7 +175,7 @@ class ExclusionsHelper
             else
             {
                 Exclusion exclusion = new Exclusion(trimmedLine);
-                if(_exclusionRegex is not null && !_exclusionRegex.IsMatch(exclusion.GetPattern()))
+                if(_exclusionRegex is not null && !_exclusionRegex.IsMatch(exclusion.Pattern))
                 {
                     // Exclusion does not match the exclusion regex, so we can skip it
                     return;
