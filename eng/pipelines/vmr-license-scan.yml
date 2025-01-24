@@ -147,8 +147,8 @@ extends:
             find artifacts/TestResults/ -type f -name "*.binlog" -exec cp {} --parents -t ${targetFolder} \;
             find artifacts/TestResults/ -type f -name "*.log" -exec cp {} --parents -t ${targetFolder} \;
             echo "Updated:"
-            find artifacts/TestResults/ -type f -name "UpdatedLicenseExclusions*.txt"
-            find artifacts/TestResults/ -type f -name "UpdatedLicenseExclusions*.txt" -exec cp {} --parents -t ${targetFolder} \;
+            find artifacts/TestResults/ -type f -name "Updatedallowed-*-licenses.txt"
+            find artifacts/TestResults/ -type f -name "Updatedallowed-*-licenses.txt" -exec cp {} --parents -t ${targetFolder} \;
             find artifacts/TestResults/ -type f -name "Updated*.json"
             find artifacts/TestResults/ -type f -name "Updated*.json" -exec cp {} --parents -t ${targetFolder} \;
             echo "Results:"

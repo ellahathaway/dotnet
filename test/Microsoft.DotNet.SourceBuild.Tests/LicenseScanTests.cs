@@ -240,7 +240,7 @@ public class LicenseScanTests : TestBase
                 }
             }
         }
-        exclusionsHelper.GenerateNewBaselineFile(updatedFileTag: _targetRepo);
+        exclusionsHelper.GenerateNewBaselineFile(updatedFileTag: _targetRepo, targetDirectory: Config.LogsDirectory);
     }
 
     private class ScancodeResults

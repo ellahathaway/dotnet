@@ -34,7 +34,7 @@ public class ArtifactsSizeTests : SdkTests
     {
         ProcessTarball(Config.SdkTarballPath!, SdkType);
 
-        _exclusionsHelper.GenerateNewBaselineFile(additionalLines: _newExclusions);
+        _exclusionsHelper.GenerateNewBaselineFile(additionalLines: _newExclusions, targetDirectory: Config.LogsDirectory);
 
         // Wait to report differences until after the baseline file is updated. 
         // Else a failure will cause the baseline file to not be updated.

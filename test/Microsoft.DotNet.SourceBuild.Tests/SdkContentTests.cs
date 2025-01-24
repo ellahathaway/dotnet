@@ -45,7 +45,7 @@ public class SdkContentTests : SdkTests
         WriteTarballFileList(Config.MsftSdkTarballPath, msftFileListingFileName, isPortable: true, MsftSdkType, exclusionsHelper);
         WriteTarballFileList(Config.SdkTarballPath, sbFileListingFileName, isPortable: false, SourceBuildSdkType, exclusionsHelper);
 
-        exclusionsHelper.GenerateNewBaselineFile(updatedFileTag: "FileList");
+        exclusionsHelper.GenerateNewBaselineFile(updatedFileTag: "FileList", targetDirectory: Config.LogsDirectory);
         
         string diff = BaselineHelper.DiffFiles(msftFileListingFileName, sbFileListingFileName, OutputHelper);
         diff = RemoveDiffMarkers(diff);
@@ -114,7 +114,7 @@ public class SdkContentTests : SdkTests
                 msftSdkAssemblyVersions.Remove(assemblyPath);
             }
         }
-        exclusionsHelper.GenerateNewBaselineFile();
+        exclusionsHelper.GenerateNewBaselineFile(targetDirectory: Config.LogsDirectory);
     }
 
     private static void WriteAssemblyVersionsToFile(Dictionary<string, Version?> assemblyVersions, string outputPath)
@@ -199,7 +199,7 @@ public class SdkContentTests : SdkTests
                 }
             }
         }
-        exclusionsHelper.GenerateNewBaselineFile(updatedFileTag: "AssemblyVersions");
+        exclusionsHelper.GenerateNewBaselineFile(updatedFileTag: "AssemblyVersions", targetDirectory: Config.LogsDirectory);
         return sbSdkAssemblyVersions;
     }
 
