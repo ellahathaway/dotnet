@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Extensions.FileSystemGlobbing;
-
 namespace ExclusionsLibrary;
 
 internal class ExclusionsStorage
@@ -101,9 +99,9 @@ internal class ExclusionsStorage
         {
             foreach (Exclusion exclusion in _storage[file])
             {
-                if (exclusion.HasMatch(filePath, suffix, out string pattern))
+                if (exclusion.HasMatch(filePath, suffix))
                 {
-                    match = (file, pattern);
+                    match = (file, exclusion.Pattern);
                     return true;
                 }
             }
