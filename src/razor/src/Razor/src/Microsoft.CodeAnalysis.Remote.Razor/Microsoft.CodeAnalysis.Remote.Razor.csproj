@@ -1,15 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>$(DefaultNetCoreTargetFramework);netstandard2.0</TargetFrameworks>
     <Description>Razor is a markup syntax for adding server-side logic to web pages. This package contains the Razor design-time infrastructure.</Description>
     <EnableApiCheck>false</EnableApiCheck>
     <IsShippingPackage>false</IsShippingPackage>
     <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
     <IsPackable Condition="'$(OS)' != 'Windows_NT'">false</IsPackable>
-
-    <!-- Uncomment this line to run formatting on runtime code-gen if FUSE is turned on -->
-    <!--<DefineConstants>$(DefineConstants);FORMAT_FUSE</DefineConstants>-->
 
     <!--
       Razor.ServiceHub won't always match the other packages Roslyn ships. This is ignorable.

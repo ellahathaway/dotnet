@@ -30,6 +30,7 @@ src/aspnetcore/src/Installers/Windows/**/*.wxs|unknown-license-reference
 
 # Applies to installer, not source
 src/fsharp/setup/resources/eula/*.rtf
+src/fsharp/tests/fsharp/core/members/ops/THIRD-PARTY-NOTICES.TXT|unknown-license-reference
 
 #
 # nuget-client
@@ -43,6 +44,7 @@ src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/DefaultManifestValue
 src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/LicenseExpressionTokenizerTests.cs
 src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/NuGetLicenseExpressionParserTests.cs
 src/nuget-client/test/NuGet.Core.Tests/NuGet.Packaging.Test/LicensesTests/NuGetLicenseTests.cs
+src/nuget-client/test/NuGet.Core.FuncTests/Dotnet.Integration.Test/PackCommandTests.cs|389-exception
 src/nuget-client/test/TestUtilities/Test.Utility/JsonData.cs
 
 #

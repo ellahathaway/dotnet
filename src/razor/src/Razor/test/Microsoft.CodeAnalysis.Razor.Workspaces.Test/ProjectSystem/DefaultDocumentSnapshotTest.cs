@@ -4,7 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.Language;
-using Microsoft.AspNetCore.Razor.ProjectSystem;
 using Microsoft.AspNetCore.Razor.Test.Common;
 using Microsoft.AspNetCore.Razor.Test.Common.Workspaces;
 using Microsoft.CodeAnalysis.Text;
@@ -31,25 +30,25 @@ public class DefaultDocumentSnapshotTest : WorkspaceTestBase
     {
         _sourceText = SourceText.From("<p>Hello World</p>");
 
-        var projectState = ProjectState.Create(ProjectEngineFactoryProvider, LanguageServerFeatureOptions, TestProjectData.SomeProject, ProjectWorkspaceState.Default);
+        var projectState = ProjectState.Create(TestProjectData.SomeProject, CompilerOptions, ProjectEngineFactoryProvider);
         var project = new ProjectSnapshot(projectState);
 
         var textLoader = TestMocks.CreateTextLoader(_sourceText);
 
-        var documentState = DocumentState.Create(s_legacyHostDocument, textLoader);
-        _legacyDocument = new DocumentSnapshot(project, documentState);
+        _legacyDocument = new ProjectSnapshot(projectState.AddDocument(s_legacyHostDocument, textLoader))
+            .GetRequiredDocument(s_legacyHostDocument.FilePath);
 
-        documentState = DocumentState.Create(s_componentHostDocument, textLoader);
-        _componentDocument = new DocumentSnapshot(project, documentState);
+        _componentDocument = new ProjectSnapshot(projectState.AddDocument(s_componentHostDocument, textLoader))
+            .GetRequiredDocument(s_componentHostDocument.FilePath);
 
-        documentState = DocumentState.Create(s_componentCshtmlHostDocument, textLoader);
-        _componentCshtmlDocument = new DocumentSnapshot(project, documentState);
+        _componentCshtmlDocument = new ProjectSnapshot(projectState.AddDocument(s_componentCshtmlHostDocument, textLoader))
+            .GetRequiredDocument(s_componentCshtmlHostDocument.FilePath);
 
-        documentState = DocumentState.Create(s_nestedComponentHostDocument, textLoader);
-        _nestedComponentDocument = new DocumentSnapshot(project, documentState);
+        _nestedComponentDocument = new ProjectSnapshot(projectState.AddDocument(s_nestedComponentHostDocument, textLoader))
+            .GetRequiredDocument(s_nestedComponentHostDocument.FilePath);
     }
 
-    [Fact]
+    [Fact(Skip = "Weak cache removed")]
     public async Task GCCollect_OutputIsNoLongerCached()
     {
         // Arrange

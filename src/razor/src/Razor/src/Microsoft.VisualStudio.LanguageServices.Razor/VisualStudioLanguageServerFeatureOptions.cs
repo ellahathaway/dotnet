@@ -19,7 +19,7 @@ internal class VisualStudioLanguageServerFeatureOptions : LanguageServerFeatureO
     private readonly Lazy<bool> _useRazorCohostServer;
     private readonly Lazy<bool> _disableRazorLanguageServer;
     private readonly Lazy<bool> _forceRuntimeCodeGeneration;
-    private readonly Lazy<bool> _useRoslynTokenizer;
+    private readonly Lazy<bool> _useNewFormattingEngine;
 
     [ImportingConstructor]
     public VisualStudioLanguageServerFeatureOptions(ILspEditorFeatureDetector lspEditorFeatureDetector)
@@ -73,11 +73,11 @@ internal class VisualStudioLanguageServerFeatureOptions : LanguageServerFeatureO
             return forceRuntimeCodeGeneration;
         });
 
-        _useRoslynTokenizer = new Lazy<bool>(() =>
+        _useNewFormattingEngine = new Lazy<bool>(() =>
         {
             var featureFlags = (IVsFeatureFlags)Package.GetGlobalService(typeof(SVsFeatureFlags));
-            var useRoslynTokenizer = featureFlags.IsFeatureEnabled(WellKnownFeatureFlagNames.UseRoslynTokenizer, defaultValue: false);
-            return useRoslynTokenizer;
+            var useNewFormattingEngine = featureFlags.IsFeatureEnabled(WellKnownFeatureFlagNames.UseNewFormattingEngine, defaultValue: false);
+            return useNewFormattingEngine;
         });
     }
 
@@ -111,5 +111,8 @@ internal class VisualStudioLanguageServerFeatureOptions : LanguageServerFeatureO
     /// <inheritdoc />
     public override bool ForceRuntimeCodeGeneration => _forceRuntimeCodeGeneration.Value;
 
-    public override bool UseRoslynTokenizer => _useRoslynTokenizer.Value;
+    public override bool UseNewFormattingEngine => _useNewFormattingEngine.Value;
+
+    // VS actually needs explicit commit characters so don't avoid them.
+    public override bool SupportsSoftSelectionInCompletion => true;
 }

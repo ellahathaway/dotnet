@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.AspNetCore.Razor.PooledObjects;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.ExternalAccess.Razor;
 using Microsoft.CodeAnalysis.Host;
@@ -106,9 +105,15 @@ internal sealed class CSharpFormatter(IDocumentMappingService documentMappingSer
             var formattedTriviaList = formattedRoot.GetAnnotatedTrivia(MarkerId);
             foreach (var trivia in formattedTriviaList)
             {
-                // We only expect one annotation because we built the entire trivia with a single annotation.
-                var annotation = trivia.GetAnnotations(MarkerId).Single();
-                if (!int.TryParse(annotation.Data, out var projectedIndex))
+                // We only expect one annotation because we built the entire trivia with a single annotation, but
+                // we need to be defensive here. Annotations are a little hard to work with though, so apologies for
+                // the slightly odd method of validation.
+                using var enumerator = trivia.GetAnnotations(MarkerId).GetEnumerator();
+                enumerator.MoveNext();
+                var annotation = enumerator.Current;
+                // We shouldn't be able to enumerate any more, and we should be able to parse our data out of the annotation.
+                if (enumerator.MoveNext() ||
+                    !int.TryParse(annotation.Data, out var projectedIndex))
                 {
                     // This shouldn't happen realistically unless someone messed with the annotations we added.
                     // Let's ignore this annotation.
@@ -283,7 +288,7 @@ internal sealed class CSharpFormatter(IDocumentMappingService documentMappingSer
 
         using var changes = new PooledArrayBuilder<TextChange>();
 
-        var syntaxTree = CSharpSyntaxTree.ParseText(context.CSharpSourceText, cancellationToken: cancellationToken);
+        var syntaxTree = context.CodeDocument.GetOrParseCSharpSyntaxTree(cancellationToken);
         var root = syntaxTree.GetRoot(cancellationToken);
 
         var previousMarkerOffset = 0;
