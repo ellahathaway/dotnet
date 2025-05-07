@@ -1,20 +1,9 @@
 # Relies on dotnet-unified-build being in the same repo as this pipeline
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/process/pipeline-triggers?view=azure-devops#branch-considerations
 
-resources:
-  pipelines:
-  - pipeline: dotnet-unified-build
-    source: dotnet-unified-build
-    # Run on every build of the main branch.
-    # For releases branches only run on internal/release branches because that's where dependencies flow.
-    # Previews don't have internal/release branches so they must be run from non-internal release branches.
-    trigger:
-      branches:
-        include:
-        - refs/heads/main
-        - refs/heads/release/*.0.1xx-preview*
-        - refs/heads/internal/release/*.0.1xx*
+# This pipeline is automatically triggered by the dotnet-unified-build pipeline during the publishing stage
 
+resources:
   repositories:
   - repository: 1ESPipelineTemplates
     type: git

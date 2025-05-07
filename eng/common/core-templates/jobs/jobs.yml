@@ -38,6 +38,9 @@ parameters:
   #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
   runAsPublic: false
 
+  # Optional: A collection of steps to run after the publish build assets job
+  publishPostSteps: []
+
   enableSourceIndex: false
   sourceIndexParams: {}
 
@@ -117,3 +120,4 @@ jobs:
         enablePublishBuildArtifacts: ${{ parameters.enablePublishBuildArtifacts }}
         artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
         signingValidationAdditionalParameters: ${{ parameters.signingValidationAdditionalParameters }}
+        postSteps: ${{ parameters.publishPostSteps }}

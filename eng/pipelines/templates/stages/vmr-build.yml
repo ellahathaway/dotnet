@@ -10,6 +10,10 @@ parameters:
   type: string
   default: ''
 
+- name: desiredComparison
+  type: string
+  default: ''
+
 # Scope of jobs which are executed
 - name: scope
   type: string
@@ -81,15 +85,10 @@ stages:
     finalJoinCondition: ${{ and(not(parameters.isSourceOnlyBuild), eq(parameters.scope, 'full')) }}
     postJoinStages:
     - ${{ if and(not(parameters.isSourceOnlyBuild), eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest')) }}:
-      - stage: Publish_Build_Assets
-        displayName: Publish Assets
-        jobs:
-        - template: /eng/common/templates-official/job/publish-build-assets.yml@self
-          parameters:
-            publishUsingPipelines: true
-            publishAssetsImmediately: true
-            pool: ${{ parameters.pool_Linux }}
-            symbolPublishingAdditionalParameters: '/p:PublishSpecialClrFiles=true'
+      - template: vmr-publish.yml
+        parameters:
+          desiredSigning: ${{ parameters.desiredSigning }}
+          desiredComparison: ${{ parameters.desiredComparison }}
 
       - template: vmr-validation.yml
         parameters:

@@ -13,6 +13,11 @@ parameters:
   type: string
   default: ''
 
+- name: desiredComparison
+  displayName: Run/Skip/default comparison parameters
+  type: string
+  default: ''
+
 variables:
 - name: _TeamName
   value: DotNetCore
@@ -22,6 +27,22 @@ variables:
 
 - name: isOfficialBuild
   value: ${{ and(eq(variables['System.TeamProject'], 'internal'), notin(variables['Build.Reason'], 'PullRequest')) }}
+
+- ${{ if eq(parameters.desiredComparison, 'Run') }}:
+  - name: runComparison
+    value: true
+- ${{ elseif eq(parameters.desiredComparison, 'Skip') }}:
+  - name: runComparison
+    value: false
+- ${{ elseif or(startsWith(parameters.desiredComparison, 'Default'), eq(parameters.desiredComparison, '')) }}:
+  # Enable comparison on the internal project if the, branch is a main or release branch
+  - ${{ if and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/internal/release/'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+    - name: runComparison
+      value: true
+  # No comparison otherwise.
+  - ${{ else }}:
+    - name: runComparison
+      value: false
 
 ## Note: The use of if expressons underneath the variable is necessary to get the updated isOfficialBuild value
 - ${{ if eq(parameters.desiredIBC, 'Enabled') }}:

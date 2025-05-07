@@ -32,6 +32,8 @@ parameters:
   # Optional: 🌤️ or not the build has assets it wants to publish to BAR
   isAssetlessBuild: false
 
+  postSteps: []
+
 jobs:
 - job: Asset_Registry_Publish
 
@@ -151,6 +153,10 @@ jobs:
             -ArtifactsPublishingAdditionalParameters '${{ parameters.artifactsPublishingAdditionalParameters }}'
             -SymbolPublishingAdditionalParameters '${{ parameters.symbolPublishingAdditionalParameters }}'
             -SkipAssetsPublishing '${{ parameters.isAssetlessBuild }}'
+
+    - ${{ if ne(parameters.postSteps, '') }}:
+      - ${{ each postStep in parameters.postSteps }}:
+        - ${{ postStep }}
 
     - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
       - template: /eng/common/core-templates/steps/publish-logs.yml

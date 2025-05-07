@@ -48,6 +48,15 @@ parameters:
     - Disabled
     - Default (disabled for manual and non-main/release builds)
 
+- name: desiredComparison
+  displayName: 'Run comparison?'
+  type: string
+  default: 'Default (skip for manual and non-main/release builds)'
+  values:
+    - Run
+    - Skip
+    - Default (skip for manual and non-main/release builds)
+
 variables:
 # enable source-only build for pipelines that contain the -source-build string
 - name: isSourceOnlyBuild
@@ -166,6 +175,7 @@ extends:
         isSourceOnlyBuild: ${{ variables.isSourceOnlyBuild }}
         desiredSigning: ${{ parameters.desiredSigning }}
         desiredIBC: ${{ parameters.desiredIBC }}
+        desiredComparison: ${{ parameters.desiredComparison }}
         ${{ if eq(variables.isScheduleTrigger, 'true') }}:
           scope: full
         ${{ elseif eq(variables.isSourceOnlyBuildLite, 'true') }}:

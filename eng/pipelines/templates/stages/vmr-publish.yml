@@ -1,0 +1,50 @@
+parameters:
+- name: desiredSigning
+  type: string
+  default: ''
+
+- name: desiredComparison
+  type: string
+  default: ''
+
+# These are not expected to be passed it but rather just object variables reused below
+- name: pool_Linux
+  type: object
+  default:
+    name: $(defaultPoolName)
+    image: $(poolImage_Linux)
+    demands: ImageOverride -equals $(poolImage_Linux)
+    os: linux
+
+stages:
+- stage: Publish_Build_Assets
+  displayName: Publish Assets
+  variables:
+  - template: ../variables/vmr-build.yml
+    parameters:
+      desiredSigning: ${{ parameters.desiredSigning }}
+      desiredComparison: ${{ parameters.desiredComparison }}
+  jobs:
+  - template: /eng/common/templates-official/job/publish-build-assets.yml@self
+    parameters:
+      publishUsingPipelines: true
+      publishAssetsImmediately: true
+      pool: ${{ parameters.pool_Linux }}
+      symbolPublishingAdditionalParameters: '/p:PublishSpecialClrFiles=true'
+      postSteps:
+      - powershell: |
+          $comparisonType = 'all'
+          if (${{ variables.signEnabled }} -eq 'true') {
+              $comparisonType = 'assets'
+          }
+
+          az pipelines run --name dotnet-unified-build-compare `
+              --branch $(Build.SourceBranch) `
+              --commit $(Build.SourceVersion) `
+              --parameters "comparisonType=$comparisonType" "unifiedBuildRunId=$(Build.BuildId)" `
+              --organization '$(AZDO_ORG)' `
+              --project '$(AZDO_PROJECT)'
+        displayName: Trigger comparison pipeline
+        condition: and(succeeded(), eq(variables['runComparison'], 'true'))
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
