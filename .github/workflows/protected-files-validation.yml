@@ -1,0 +1,32 @@
+name: 'Check Protected Files for Changes'
+
+on:
+  pull_request:
+    paths:
+      - eng/common/**/*
+      - eng/Version.Details.xml
+      - eng/Versions.props
+
+permissions:
+  pull-requests: read
+
+jobs:
+  protected-files-validation:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET and Darc
+        run: |
+          . eng/common/tools.sh
+          GetDarc
+
+      - name: Run protected files validation
+        run: |
+          .dotnet/dotnet build eng/protected-files-validation.proj \
+            /p:PullRequestTargetBranch=${{ github.event.pull_request.base.ref }} \
+            /p:PullRequestTitle="${{ github.event.pull_request.title }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
