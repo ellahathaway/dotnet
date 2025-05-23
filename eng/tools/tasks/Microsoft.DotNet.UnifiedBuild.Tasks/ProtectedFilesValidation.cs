@@ -134,7 +134,7 @@ public class ProtectedFilesValidation : Microsoft.Build.Utilities.Task
 
     private bool IsIgnorablePullRequestTitle()
     {
-        string titlePattern = @"^(rebootstrap|re-bootstrap|release|\.NET Source-Build \* Updates)";
+        string titlePattern = @"^(rebootstrap|re-bootstrap|release|\.NET Source-Build .* Updates)";
         return Regex.IsMatch(PullRequestTitle, titlePattern, RegexOptions.IgnoreCase);
     }
 }
