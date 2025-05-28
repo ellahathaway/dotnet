@@ -7,6 +7,8 @@ set -u
 # Prevents hidden errors caused by missing error code propagation.
 set -e
 
+# new comment
+
 usage()
 {
   echo "Common settings:"
