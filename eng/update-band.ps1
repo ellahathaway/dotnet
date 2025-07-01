@@ -1,50 +1,88 @@
-[CmdletBinding(PositionalBinding=$false)]
-Param(
-    [Parameter(Mandatory = $true)]
-    [string]$Remote,
-
-    [Parameter(Mandatory = $true)]
-    [Alias("branch-1xx")]
-    [string]$Branch1xx,
-
-    [switch][Alias('h')]$help
+param(
+    [string]$remote,
+    [string]$branch_1xx,
+    [switch]$continue,
+    [switch]$help
 )
 
-function Get-Usage {
-    Write-Host "  -Remote <name>           Git remote to pull from (e.g., upstream)"
-    Write-Host "  -1xx-branch <branch>     1xx branch name to merge in (e.g., main)"
-    Write-Host ""
-    Write-Host "  -help                    Print help and exit (short: -h)"
+function Show-Usage {
+    Write-Output "Usage: script.ps1 --remote <name> --1xx-branch <branch>"
+    Write-Output ""
+    Write-Output "  -remote <name>         Git remote to pull from (e.g., upstream)"
+    Write-Output "  -branch_1xx <branch>   1xx branch name to merge in (e.g., main)"
+    Write-Output "  -continue              Continue after manually fixing merge conflicts"
+    Write-Output "  -help                  Show this help message and exit"
+    Write-Output ""
 }
 
-if ($help) {
-  Get-Usage
-  exit 0
+function Attempt-Merge {
+    $conflicts = git diff --check | Out-String
+    $unmergedFiles = git ls-files -u
+
+    if ($conflicts.Trim() -ne "" -or $unmergedFiles.Count -gt 0) {
+        Write-Error "There are unresolved conflicts. Please resolve them before continuing."
+        exit 1
+    } else {
+        Write-Output "Continuing with merge..."
+        $mergeMsg = Get-Content ".git/MERGE_MSG" -TotalCount 1
+        git commit -m "$mergeMsg"
+    }
 }
 
-# List of deleted repos
-$DeletedRepos = @(
+$deleted_repos = @(
     "aspire", "aspnetcore", "cecil", "command-line-api", "deployment-tools",
     "diagnostics", "efcore", "emsdk", "runtime", "source-build-externals",
     "sourcelink", "symreader", "windowsdesktop", "winforms", "wpf", "xdt"
 )
 
-# Attempt merge
-$mergeSuccess = git merge --no-commit --no-ff "$Remote/$Branch1xx" 2>$null
+if ($help -or !$PSBoundParameters.Keys.Count) {
+    Show-Usage
+    exit 0
+}
 
-if (-not $?) {
-    Write-Output "Cleaning excluded paths..."
-
-    foreach ($repo in $DeletedRepos) {
-        if (Test-Path "src/$repo") {
-            git reset HEAD -- "$path" 2>$null
-            git rm -rf --cached "$path" 2>$null
-            Remove-Item -Recurse -Force "$path" -ErrorAction SilentlyContinue
-        }
+if (-not $continue) {
+    if (-not $remote) {
+        Write-Error "Error: --remote is required."
+        Show-Usage
+        exit 1
+    }
+    if (-not $branch_1xx) {
+        Write-Error "Error: --1xx-branch is required."
+        Show-Usage
+        exit 1
     }
 
-    $mergeMsg = Get-Content ".git/MERGE_MSG" -TotalCount 1
-    git commit -m "$mergeMsg"
+    git diff --quiet
+    $diffExit = $LASTEXITCODE
+
+    git diff --cached --quiet
+    $cachedExit = $LASTEXITCODE
+
+    if ($diffExit -ne 0 -or $cachedExit -ne 0) {
+        Write-Error "You have uncommitted changes. Please commit or stash them before continuing."
+        exit 1
+    }
+
+    $mergeTarget = "$remote/$branch_1xx"
+    $mergeResult = & git merge --no-commit --no-ff "$mergeTarget" 2>&1
+    $mergeExitCode = $LASTEXITCODE
+
+    if ($mergeExitCode -ne 0) {
+        Write-Output "Cleaning excluded paths..."
+
+        foreach ($repo in $deleted_repos) {
+            $repoPath = Join-Path -Path "src" -ChildPath $repo
+            if (Test-Path $repoPath -PathType Container) {
+                git reset HEAD -- "$repoPath" 2>$null -ErrorAction SilentlyContinue
+                git rm -rf --cached "$repoPath" 2>$null -ErrorAction SilentlyContinue
+                Remove-Item -Recurse -Force "$repoPath" -ErrorAction SilentlyContinue
+            }
+        }
+
+        Attempt-Merge
+    }
+} else {
+    Attempt-Merge
 }
 
 Write-Output "Completed merge"
