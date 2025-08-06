@@ -55,6 +55,11 @@
     <!-- Binary detection -->
     <BinariesReportDir>$(ArtifactsLogDir)binary-report</BinariesReportDir>
     <BinariesReportFile>$(BinariesReportDir)/NewBinaries.txt</BinariesReportFile>
+
+    <!-- Baseline Update PR creation -->
+    <!-- We cannot create baseline update PRs in source-only mode because the task package is not source-buildable. -->
+    <CreateBinariesBaselineUpdatePR Condition="'$(DotNetBuildSourceOnly)' == 'true' or '$(CreateBinariesBaselineUpdatePR)' == ''">false</CreateBinariesBaselineUpdatePR>
+    <BaselineUpdatePRRepo>dotnet/dotnet</BaselineUpdatePRRepo>
   </PropertyGroup>
 
   <!-- Build task assembly paths -->

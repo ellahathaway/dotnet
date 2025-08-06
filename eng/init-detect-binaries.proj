@@ -26,4 +26,25 @@
       OutputReportDirectory="$(BinariesReportDir)" />
   </Target>
 
+  <Target Name="CreateBaselineUpdatePR"
+          DependsOnTargets="DetectBinaries"
+          Condition="'$(CreateBinariesBaselineUpdatePR)' == 'true'">
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.DotNet.Baselines.Tasks" Version="$(MicrosoftDotNetBaselinesTasksVersion)" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <BinariesBaselineUpdatePRTitle>Update VMR Binaries Baselines</BinariesBaselineUpdatePRTitle>
+    </PropertyGroup>
+
+    <CreateUpdatePR
+      Repo="$(BaselineUpdatePRRepo)"
+      Branch="$(BaselineUpdatePRTargetBranch)"
+      OriginalFilesDirectory="$(RepositoryEngineeringDir)"
+      UpdatedFilesDirectory="$(BinariesReportDir)"
+      Title="$(BinariesBaselineUpdatePRTitle)"
+      BuildId="$(BuildId)" />
+  </Target>
+
 </Project>
