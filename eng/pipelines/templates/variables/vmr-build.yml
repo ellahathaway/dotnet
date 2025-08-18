@@ -79,7 +79,7 @@ variables:
   - name: signEnabled
     value: true
   - name: signType
-    value: Real
+    value: real
   - ${{ if and(eq(parameters.isOfficialBuild, true), or(startsWith(variables['Build.SourceBranch'], 'refs/heads/internal/release/'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
     - name: signDacEnabled
       value: true
@@ -90,7 +90,7 @@ variables:
   - name: signEnabled
     value: true
   - name: signType
-    value: Test
+    value: test
   - name: signDacEnabled
     value: false
 - ${{ elseif eq(parameters.desiredSigning, 'Signed (Dry Run)') }}:
