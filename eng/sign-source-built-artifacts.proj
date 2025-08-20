@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.Build.Traversal">
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(TasksDir)Microsoft.DotNet.SourceBuild.Tasks.Sign\Microsoft.DotNet.SourceBuild.Tasks.Sign.csproj" />
+  </ItemGroup>
+
+  <UsingTask TaskName="Microsoft.DotNet.SourceBuild.Tasks.Sign.SignArtifacts" AssemblyFile="$(MicrosoftDotNetSourceBuildTasksSignAssembly)" TaskFactory="TaskHostFactory" />
+
+  <Target Name="SignArtifacts"
+      DependsOnTargets="ResolveProjectReferences"
+      BeforeTargets="Build">
+
+    <ItemGroup Condition="'$(SourceBuiltArtifactsPath)' == ''">
+      <SourceBuiltArtifactsItem Include="$(SourceBuiltAssetsDir)/$(SourceBuiltArtifactsTarballName).*$(ArchiveExtension)" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <SourceBuiltSdkTarballPath Condition="'$(SourceBuiltSdkTarballPath)' == ''">$(SourceBuiltAssetsDir)/$(SdkFilename)</SourceBuiltSdkTarballPath>
+      <SourceBuiltArtifactsPath Condition="'$(SourceBuiltArtifactsPath)' == ''">%(SourceBuiltArtifactsItem.Identity)</SourceBuiltArtifactsPath>
+    </PropertyGroup>
+
+    <Microsoft.DotNet.SourceBuild.Tasks.Sign.SignArtifacts
+      DotNetEngDirectory="$(RepositoryEngineeringDir)"
+      SourceBuiltSdkTarballPath="$(SourceBuiltSdkTarballPath)"
+      SourceBuiltArtifactsPath="$(SourceBuiltArtifactsPath)"
+      OfficialBuildId="$(OfficialBuildId)"
+      LogsDirectory="$(ArtifactsLogDir)"
+      SignProperties="$(SignProperties)" />
+  </Target>
+
+</Project>

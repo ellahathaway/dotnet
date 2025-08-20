@@ -665,8 +665,17 @@ jobs:
   - ${{ if eq(parameters.sign, 'True') }}:
     - ${{ if eq(parameters.buildSourceOnly, 'true') }}:
       - script: |
-          echo "Signing the Source-Built artifacts"
+          . eng/common/tools.sh
+
+          sign_properties="$(signProperties) $(_SignDiagnosticFilesArgs)"
+
+          MSBuild -restore eng/sign-source-built-artifacts.proj \
+            /t:SignArtifacts \
+            /p:SignProperties=$sign_properties \
+            /p:ArtifactsStagingDir=$(Build.ArtifactStagingDirectory) \
+            /p:OfficialBuildId=$(Build.BuildNumber)
         displayName: Sign Source-Built Artifacts
+        workingDirectory: $(Build.SourcesDirectory)
 
     - ${{ if eq(parameters.signType, 'Real') }}:
       - template: ${{ variables['Build.SourcesDirectory'] }}/eng/common/core-templates/steps/cleanup-microbuild.yml
