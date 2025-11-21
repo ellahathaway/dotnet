@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <ExternalCertificateId>3PartySHA2</ExternalCertificateId>
+    <DetachedSignatureCertificateId>LinuxSign500180PGP</DetachedSignatureCertificateId>
     <UseDotNetCertificate>true</UseDotNetCertificate>
   </PropertyGroup>
 
@@ -16,6 +17,12 @@
   <ItemGroup>
     <!-- We don't need to code sign .js files because they are not used in Windows Script Host -->
     <FileExtensionSignInfo Update=".js" CertificateName="None" />
+
+    <!-- Specify assets that should be signed with a detached signature -->
+    <FileSignInfo Include="@(DetachedSignatureAssets->'%(Filename)%(Extension)')" CertificateName="$(DetachedSignatureCertificateId)" />
+    <CertificatesSignInfo Include="$(DetachedSignatureCertificateId)" DetachedSignature="true" />
+    <!-- Need to find a way to not unpack these files in SignTool -->
+    <NoUnpackSignInfo Include="@(DetachedSignatureAssets->'%(Filename)%(Extension)')" />
 
     <!-- Sign 3rd party files that end up in the artifacts -->
     <FileSignInfo Include="Humanizer.dll" CertificateName="$(ExternalCertificateId)" />

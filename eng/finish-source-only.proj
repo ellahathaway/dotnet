@@ -238,12 +238,14 @@
     <RemoveDir Directories="$(IntermediateSdkSymbolsLayout)" />
   </Target>
 
-  <!-- After building, generate the source tarball and zipball -->
   <UsingTask TaskName="Microsoft.DotNet.UnifiedBuild.Tasks.CreateSourceArtifacts" AssemblyFile="$(MicrosoftDotNetUnifiedBuildTasksAssembly)" TaskFactory="TaskHostFactory" />
   <Target Name="CreateSourceArtifacts"
           BeforeTargets="Build"
           DependsOnTargets="WriteSourceBuiltSdkVersionFile"
-          Condition="'$(CreateSourceArtifacts)' == 'true'" >
+          Condition="'$(CreateSourceArtifacts)' == 'true' or $(CreateSourceArtifactsEmptySignatures) == 'true'" >
+    <Error
+      Text="Cannot create empty source artifact signature files unless source artifacts are being created."
+      Condition="'$(CreateSourceArtifacts)' != 'true' and '$(CreateSourceArtifactsEmptySignatures)' == 'true'" />
 
     <CreateSourceArtifacts
         SourceCommit="$(RepositoryCommit)"
@@ -251,7 +253,8 @@
         SdkStableVersion="$(SourceBuiltSdkVersion)"
         SdkNonStableVersion="$(SourceBuiltSdkNonStableVersion)"
         RepoRoot="$(RepoRoot)"
-        OutputDirectory="$(ArtifactsAssetsDir)" />
+        OutputDirectory="$(ArtifactsAssetsDir)"
+        CreateEmptySignatureFiles="$(CreateSourceArtifactsEmptySignatures)" />
   </Target>
 
   <UsingTask TaskName="Microsoft.DotNet.UnifiedBuild.Tasks.UsageReport.WriteUsageBurndownData" AssemblyFile="$(MicrosoftDotNetUnifiedBuildTasksAssembly)" TaskFactory="TaskHostFactory" />

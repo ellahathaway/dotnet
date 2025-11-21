@@ -588,6 +588,11 @@ jobs:
           
           if [[ '${{ parameters.createSourceArtifacts }}' == 'True' ]]; then
             extraBuildProperties="$extraBuildProperties /p:CreateSourceArtifacts=true"
+            if [[ '${{ parameters.buildSourceOnly }}' == 'True' && '${{ parameters.sign }}' == 'True' ]]; then
+              # Source-build signing happens post build, so we need to create empty signatures
+              # for the source artifacts so that the build manifest includes the signature files.
+              customBuildArgs="$customBuildArgs /p:CreateSourceArtifactsEmptySignatures=true"
+            fi
           fi
 
           if [[ '${{ parameters.useMonoRuntime }}' == 'True' ]]; then

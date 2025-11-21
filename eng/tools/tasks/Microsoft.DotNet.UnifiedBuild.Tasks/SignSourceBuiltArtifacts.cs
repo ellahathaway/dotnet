@@ -23,6 +23,12 @@ public class SignSourceBuiltArtifacts : BuildTask
     public required ITaskItem[] SignableSourceBuiltAssets { get; init; }
 
     /// <summary>
+    /// List of source-built assets to sign with detached signatures
+    /// </summary>
+    [Required]
+    public required ITaskItem[] DetachedSignatureAssets { get; init; }
+
+    /// <summary>
     /// Path to the eng directory
     /// </summary>
     [Required]
@@ -125,6 +131,7 @@ public class SignSourceBuiltArtifacts : BuildTask
         string buildScript = Path.Combine(DotNetEngDirectory, "common", "build.sh");
         string binlog = Path.Combine(LogsDirectory, SignBinlogFileName);
         string signableAssets = string.Join(';', SignableSourceBuiltAssets.Select(a => a.ItemSpec));
+        string detachedSignatureAssets = string.Join(';', DetachedSignatureAssets.Select(a => a.ItemSpec));
 
         string arguments =
             $"--ci " +
@@ -136,6 +143,7 @@ public class SignSourceBuiltArtifacts : BuildTask
             $"/bl:{binlog} " +
             $"/p:OfficialBuildId={OfficialBuildId} " +
             $"/p:SignableSourceBuiltAssets=\\\"{signableAssets}\\\" " +
+            $"/p:DetachedSignatureAssets=\\\"{detachedSignatureAssets}\\\" " +
             $"{SignProperties}";
 
         return (buildScript, arguments);

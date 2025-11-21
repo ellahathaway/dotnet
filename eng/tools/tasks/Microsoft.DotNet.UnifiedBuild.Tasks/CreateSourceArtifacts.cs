@@ -54,6 +54,12 @@ public class CreateSourceArtifacts : BuildTask
     [Required]
     public required string OutputDirectory { get; init; }
 
+    /// <summary>
+    /// Create empty signature files for the generated source artifacts
+    /// </summary>
+    [Required]
+    public required bool CreateEmptySignatureFiles { get; init; }
+
     private const string GitHubRepoName = "dotnet";
     private const string GitHubTimezone = "America/Los_Angeles"; // GitHub uses this timezone for commit timestamps in zip metadata
     private const int GitArchiveTimeout = 5 * 60 * 1000; // 5 minutes
@@ -102,6 +108,15 @@ public class CreateSourceArtifacts : BuildTask
             if (result.ExitCode != 0)
             {
                 errors.Enqueue($"[{artifactType}] Git exited with code {result.ExitCode}: {result.Error}");
+            }
+            else
+            {
+                if (CreateEmptySignatureFiles)
+                {
+                    string signatureFilePath = $"{artifactFilePath}.sig";
+                    File.WriteAllText(signatureFilePath, string.Empty);
+                    Log.LogMessage(MessageImportance.High, $"[{artifactType}] Created signature file at: {signatureFilePath}");
+                }
             }
         }
         catch (Exception ex)
