@@ -45,6 +45,10 @@ You can re-bootstrap the VMR using [this
 pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1571). The
 pipeline will open the corresponding re-bootstrap PRs.
 
+After a 1xx feature band is re-bootstrapped and its PR is merged, use the
+backport-rebootstrap skill to apply the same updates to other feature band
+branches (for example, 2xx and 3xx).
+
 ### Manual
 
 In case the automated re-bootstrapping pipeline is unavailable, you can manually
@@ -71,3 +75,8 @@ re-bootstrap the VMR:
        with the non-stable SDK version.
 1. Update arcade
     1. Run `darc update-dependencies --id <bar_id>` from the root of the VMR
+1. Backport to non-1xx feature band branches
+    1. After the 1xx re-bootstrap PR is merged, use the
+       [backport-rebootstrap skill](../.github/skills/backport-rebootstrap/SKILL.md)
+        to apply the same updates to other feature band branches (for
+        example, 2xx and 3xx).
